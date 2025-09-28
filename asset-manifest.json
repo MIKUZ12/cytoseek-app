@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/MIKUZ12/cytoseek-app/static/css/main.86a2ddd8.css",
+    "main.js": "/MIKUZ12/cytoseek-app/static/js/main.5293f8f7.js",
+    "static/js/453.fc3a57a9.chunk.js": "/MIKUZ12/cytoseek-app/static/js/453.fc3a57a9.chunk.js",
+    "index.html": "/MIKUZ12/cytoseek-app/index.html",
+    "main.86a2ddd8.css.map": "/MIKUZ12/cytoseek-app/static/css/main.86a2ddd8.css.map",
+    "main.5293f8f7.js.map": "/MIKUZ12/cytoseek-app/static/js/main.5293f8f7.js.map",
+    "453.fc3a57a9.chunk.js.map": "/MIKUZ12/cytoseek-app/static/js/453.fc3a57a9.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.86a2ddd8.css",
+    "static/js/main.5293f8f7.js"
+  ]
+}
