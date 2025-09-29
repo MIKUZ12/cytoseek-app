@@ -5,6 +5,10 @@ const App = () => {
   const [inputValue, setInputValue] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [camera1Connected, setCamera1Connected] = useState(false);
+  const [camera2Connected, setCamera2Connected] = useState(false);
+  const [connectingCamera, setConnectingCamera] = useState("");
 
   const predefinedResponses = {
     // === 日常问候类 (原 P0) ===
@@ -28,6 +32,10 @@ const App = () => {
       "response": "我可以帮助您识别显微图像中的寄生虫细胞、返回细胞坐标、调用CytoSeek系统进行自动捕捉，也可以解答相关操作问题。需要试试吗？",
       "videoUrl": ""
     },
+    "你可以做些什么": {
+      "response": "你好，我是CytoSeek智能助手。我可以为您：\n\n1.  **识别与查询**：识别显微图像中的寄生虫，提供它们的位置坐标和数量。\n2.  **系统调用**：启动CytoSeek系统，对识别出的目标进行全自动捕捉。\n3.  **操作答疑**：解答关于系统操作、识别准确率、结果导出等相关问题，并为常见问题（如图像模糊）提供建议。\n\n您可以直接向我提问，例如‘帮我识别图中的寄生虫’或‘启动自动捕捉’。",
+      "videoUrl": ""
+    },
     "你是谁": {
       "response": "我是CytoSeek智能助手，专门用于辅助寄生虫的识别与捕捉。",
       "videoUrl": ""
@@ -40,6 +48,20 @@ const App = () => {
       "response": "再见！期待下次为您服务。",
       "videoUrl": ""
     },
+
+    "连接摄像头1": {
+      "response": "好的，正在启动CytoSeek系统摄像头1...",
+      "videoUrl": ""
+    },
+    "连接摄像头2": {
+      "response": "好的，正在启动CytoSeek系统摄像头2...",
+      "videoUrl": ""
+    },
+    "取消连接": {
+      "response": "好的，正在关闭CytoSeek系统摄像头...",
+      "videoUrl": ""
+    },
+
 
     // === 寄生虫识别与坐标查询 (原 P1) ===
     "请你识别并标注出显微图像中的寄生虫细胞": {
@@ -193,10 +215,6 @@ const App = () => {
     "为什么会漏掉一些细胞": {
       "response": "这可能是因为细胞重叠、图像焦点不清晰或细胞形态不典型导致的。提高图像质量或尝试在不同焦平面上多次识别可以改善这个问题。",
       "videoUrl": ""
-    },
-    "我想看操作说明": {
-      "response": "好的，您可以在系统主界面的‘帮助’菜单中找到详细的用户手册和操作视频教程。",
-      "videoUrl": ""
     }
 };
 
@@ -226,9 +244,39 @@ const App = () => {
         }
       }
 
-      // 设置当前视频URL
-      setCurrentVideoUrl(videoUrl);
-      
+      // 连接摄像头1：先显示连接动画，2秒后显示视频
+      if (inputValue.includes("连接摄像头1")) {
+        setIsConnecting(true);
+        setConnectingCamera("摄像头1");
+        setCurrentVideoUrl("");
+        setTimeout(() => {
+          setIsConnecting(false);
+          setConnectingCamera("");
+          setCurrentVideoUrl(`${process.env.PUBLIC_URL}/ca1.mp4`);
+          setCamera1Connected(true);
+          setCamera2Connected(false);
+        }, 2000);
+      } else if (inputValue.includes("连接摄像头2")) {
+        // 连接摄像头2：先显示连接动画，2秒后显示视频
+        setIsConnecting(true);
+        setConnectingCamera("摄像头2");
+        setCurrentVideoUrl("");
+        setTimeout(() => {
+          setIsConnecting(false);
+          setConnectingCamera("");
+          setCurrentVideoUrl(`${process.env.PUBLIC_URL}/ca3.mp4`);
+          setCamera2Connected(true);
+          setCamera1Connected(false);
+        }, 3000);
+      } else if (inputValue.includes("请你识别并标注出显微图像中的寄生虫细胞")) {
+        // 只有连接摄像头1后才有效
+        if (camera1Connected) {
+          setCurrentVideoUrl(`${process.env.PUBLIC_URL}/ca2.MP4`);
+        }
+      } else {
+        setCurrentVideoUrl(videoUrl);
+      }
+
       // 先插入一个空的 agent 消息
       setMessages(prev => [...prev, { type: 'agent', text: '' }]);
 
@@ -316,10 +364,11 @@ const App = () => {
               {/* CytoSeek Logo 作为固定背景水印 - 在对话框中间 */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none z-0">
                 <img 
-                  src="/logo.png" 
+                  src={`${process.env.PUBLIC_URL}/logo.png`} 
                   alt="CytoSeek Logo" 
                   className="w-64 h-64 object-contain"
                 />
+
               </div>
 
               {/* 输入区域 */}
@@ -357,14 +406,35 @@ const App = () => {
               </div>
               
               <div className="flex-1 p-6 flex items-center justify-center">
-                {currentVideoUrl ? (
-                  <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200">
-                    <video
-                      src={currentVideoUrl}
-                      controls
-                      className="w-full h-full object-cover"
-                      autoPlay
-                    />
+                {isConnecting ? (
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <div className="text-blue-500 font-semibold">正在连接{connectingCamera}…</div>
+                  </div>
+                ) : currentVideoUrl ? (
+                  <div className="bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200 flex items-center justify-center" style={{ width: '100%', aspectRatio: '16/9', maxWidth: '640px', maxHeight: '360px', margin: '0 auto' }}>
+                    {currentVideoUrl.endsWith('/ca2.MP4') ? (
+                      <video
+                        src={currentVideoUrl}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '16/9' }}
+                        className="block"
+                        autoPlay
+                        playsInline
+                        muted
+                        controls={false}
+                      />
+                    ) : (
+                      <video
+                        src={currentVideoUrl}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', aspectRatio: '16/9' }}
+                        className="block"
+                        autoPlay
+                        loop
+                        playsInline
+                        muted
+                        controls={false}
+                      />
+                    )}
                   </div>
                 ) : (
                   <div className="text-center text-gray-500">
@@ -373,7 +443,7 @@ const App = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-4.553A2 2 0 0120 6v12a2 2 0 01-2 2h-2.793a2 2 0 01-1.697-.59L12 19.407V4.593a2 2 0 011.697-.59L15 10z" />
                       </svg>
                     </div>
-                    <p>等待用户输入以显示对应视频</p>
+                    <p>等待用户输入以连接显微镜头</p>
                   </div>
                 )}
               </div>
